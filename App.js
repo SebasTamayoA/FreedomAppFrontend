@@ -2,29 +2,23 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import Login from './Login';
 import Home from './Home'; // Importa tu componente Home
-import LoginSignup from './LoginSignup';
+import FreedomApp from './FreedomApp';
+import EditProfile from './EditProfile';
 
 const Stack = createStackNavigator();
 
 const App = () => {
   return (
     <NavigationContainer>
-
-
       <Stack.Navigator
-
-        initialRouteName="LoginSignup">
-
-
+        initialRouteName="FreedomApp">
         <Stack.Screen
-
-          name="LoginSignup"
-
-          component={LoginSignup} />
+          name="FreedomApp"
+          component={FreedomApp} />
         <Stack.Screen name="Home" component={Home} />
-        {/* Agrega otras pantallas según sea necesario */}
+        {/* Agrega más pantallas según sea necesario */}
+        <Stack.Screen name="EditProfile" component={EditProfile} />
       </Stack.Navigator>
     </NavigationContainer>
   );

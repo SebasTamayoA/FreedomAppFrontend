@@ -1,111 +1,93 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
-
-const usersData = [
-  {
-    id: '1',
-    name: 'Usuario 1',
-    image: 'https://source.unsplash.com/100x100/?person', // Ejemplo de URL de Unsplash
-  },
-  {
-    id: '2',
-    name: 'Usuario 2',
-    image: 'https://source.unsplash.com/100x100/?portrait', // Ejemplo de URL de Unsplash
-  },
-  // Agrega más usuarios
-  {
-    id: '3',
-    name: 'Usuario 3',
-    image: 'https://source.unsplash.com/100x100/?people', // Ejemplo de URL de Unsplash
-  },
-  {
-    id: '4',
-    name: 'Usuario 4',
-    image: 'https://source.unsplash.com/100x100/?person', // Ejemplo de URL de Unsplash
-  },
-  {
-    id: '5',
-    name: 'Usuario 5',
-    image: 'https://source.unsplash.com/100x100/?portrait', // Ejemplo de URL de Unsplash
-  },
-  {
-    id: '6',
-    name: 'Usuario 6',
-    image: 'https://source.unsplash.com/100x100/?people', // Ejemplo de URL de Unsplash
-  },
-  {
-    id: '7',
-    name: 'Usuario 7',
-    image: 'https://source.unsplash.com/100x100/?person', // Ejemplo de URL de Unsplash
-  },
-  {
-    id: '8',
-    name: 'Usuario 8',
-    image: 'https://source.unsplash.com/100x100/?portrait', // Ejemplo de URL de Unsplash
-  },
-  {
-    id: '9',
-    name: 'Usuario 9',
-    image: 'https://source.unsplash.com/100x100/?people', // Ejemplo de URL de Unsplash
-  },
-  {
-    id: '10',
-    name: 'Usuario 10',
-    image: 'https://source.unsplash.com/100x100/?person', // Ejemplo de URL de Unsplash
-  },
-  {
-    id: '11',
-    name: 'Usuario 11',
-    image: 'https://source.unsplash.com/100x100/?portrait', // Ejemplo de URL de Unsplash
-  },
-  {
-    id: '12',
-    name: 'Usuario 12',
-    image: 'https://source.unsplash.com/100x100/?people', // Ejemplo de URL de Unsplash
-  },
-  {
-    id: '13',
-    name: 'Usuario 13',
-    image: 'https://source.unsplash.com/100x100/?person', // Ejemplo de URL de Unsplash
-  },
-  {
-    id: '14',
-    name: 'Usuario 14',
-    image: 'https://source.unsplash.com/100x100/?portrait', // Ejemplo de URL de Unsplash
-  }
-];
+import { Picker } from '@react-native-picker/picker';
+import axios from 'axios';
+import BottomBar from './BottomBar';
 
 
-const Home = () => {
+const Home = ({ navigation }) => {
+  const [users, setUsers] = useState([]);
+  const [selectedCountry, setSelectedCountry] = useState(null);
+  const [countries, setCountries] = useState([]);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await axios.get('http://localhost:3001/home/index');
+        setUsers(response.data);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      }
+    };
+
+    const fetchCountries = async () => {
+      try {
+        const response = await axios.get('http://localhost:3001/countries');
+        setCountries(response.data);
+      } catch (error) {
+        console.error('Error fetching countries:', error);
+      }
+    };
+
+    fetchUsers();
+    fetchCountries();
+  }, []);
+
   const numColumns = 3;
+
+  const handleEditProfile = (userId) => {
+    // Navegar a la pantalla EditProfile
+    navigation.navigate('EditProfile', { userId });
+  }
+
+  // Función para obtener el componente de círculo según la disponibilidad
+  const getAvailabilityIndicator = (isAvailable) => (
+    <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: isAvailable ? 'green' : 'gray' }} />
+  );
 
   const renderUserCard = ({ item }) => (
     <TouchableOpacity style={styles.cardContainer} onPress={() => handleVideoCall(item)}>
-      <Image source={{ uri: item.image }} style={styles.userImage} />
+      <Image source={{ uri: item.avatar }} style={styles.userImage} />
       <Text style={styles.userName}>{item.name}</Text>
+      <Text style={styles.userName}>{item.age}</Text>
+      <Text style={styles.userName}>{item.country}</Text>
+      {/* Agrega el indicador de disponibilidad */}
+      {getAvailabilityIndicator(item.is_available)}
     </TouchableOpacity>
   );
 
   const handleVideoCall = (user) => {
-    // Lógica para iniciar una videollamada con el usuario seleccionado
     console.log(`Iniciando videollamada con ${user.name}`);
-    // Puedes navegar a otra pantalla, mostrar un modal, etc.
   };
+
+
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Usuarios Disponibles</Text>
+      <Picker
+        selectedValue={selectedCountry}
+        onValueChange={(itemValue) => setSelectedCountry(itemValue)}
+      >
+        <Picker.Item label="Todos los países" value="" />
+        {countries.map((country) => (
+          <Picker.Item key={country} label={country} value={country} />
+        ))}
+      </Picker>
       <FlatList
-        data={usersData}
-        keyExtractor={(item) => item.id}
+        data={selectedCountry ? users.filter((user) => user.country === selectedCountry) : users}
+        keyExtractor={(user) => user.id.toString()}
         renderItem={renderUserCard}
-        numColumns={numColumns} // Muestra 3 usuarios por fila
+        numColumns={numColumns}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.userList}
       />
+      <BottomBar onPressEditProfile={handleEditProfile} />
     </View>
   );
 };
+
+
 
 const styles = StyleSheet.create({
   container: {
@@ -115,8 +97,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     marginBottom: 16,
-    // centrar texto
-    textAlign: 'center'
+    textAlign: 'center',
   },
   userList: {
     marginTop: 16,
@@ -125,13 +106,16 @@ const styles = StyleSheet.create({
     flex: 1,
     margin: 8,
     alignItems: 'center',
+    justifyContent: 'space-between', // Añadido para distribuir el espacio verticalmente
   },
+
   userImage: {
-    width: '20%',
-    height: 100,
+    width: '100%', // Cambiado para ocupar el ancho completo de la celda
+    aspectRatio: 1, // Añadido para mantener una relación de aspecto cuadrada
     borderRadius: 50,
     marginBottom: 8,
   },
+
   userName: {
     fontSize: 16,
     textAlign: 'center',

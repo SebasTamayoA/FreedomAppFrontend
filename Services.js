@@ -11,7 +11,10 @@ const login = async (email, password) => {
     });
 
     const authToken = response.data.token;
+    const userId = response.data.status.data.user.id;
+
     await AsyncStorage.setItem('token', authToken);
+    await AsyncStorage.setItem('userId', userId);
 
     return true;
   } catch (error) {

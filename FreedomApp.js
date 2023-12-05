@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { login, register } from './Services';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const LoginSignup = () => {
+const FreedomApp = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -11,20 +12,24 @@ const LoginSignup = () => {
   const [isLogin, setIsLogin] = useState(true);
   const navigation = useNavigation();
 
+  const handleLogin = async () => {
+    await login(email, password);
+    const userId = await AsyncStorage.getItem('userId');
+    navigation.navigate('Home', { userId });
+  };
+
+  const handleRegistration = async () => {
+    if (password !== passwordConfirmation) {
+      console.log('La contraseña y la confirmación no coinciden');
+      return;
+    }
+    await register(name, email, password);
+    navigation.navigate('Home');
+  };
+
   const onSubmit = async () => {
     try {
-      if (isLogin) {
-        await login(email, password);
-        navigation.navigate('Home');
-      } else {
-        // Aquí puedes agregar la lógica para verificar que la contraseña y la confirmación coincidan
-        if (password === passwordConfirmation) {
-          await register(name, email, password);
-          navigation.navigate('Home');
-        } else {
-          console.log('La contraseña y la confirmación no coinciden');
-        }
-      }
+      isLogin ? handleLogin() : handleRegistration();
     } catch (error) {
       console.log(error);
     }
@@ -32,6 +37,7 @@ const LoginSignup = () => {
 
   return (
     <View style={styles.container}>
+      <Image source={require('/assets/logo.png')} style={styles.logo} />
       <Text style={styles.title}>{isLogin ? 'Inicio de sesión' : 'Registro'}</Text>
       {!isLogin && (
         <TextInput
@@ -77,7 +83,7 @@ const LoginSignup = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'top',
     alignItems: 'center',
     padding: 16,
   },
@@ -106,6 +112,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textDecorationLine: 'underline',
   },
+  logo: {
+    width: 500,
+    height: 200,
+    marginTop: 50,
+    marginBottom: 50,
+  },
 });
 
-export default LoginSignup;
+export default FreedomApp;
